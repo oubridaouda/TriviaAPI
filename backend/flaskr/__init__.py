@@ -1,4 +1,6 @@
+from calendar import c
 import os
+from unicodedata import category
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
@@ -16,16 +18,29 @@ def create_app(test_config=None):
     """
     @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
     """
-
+    cors = CORS(app, resources={r"/*": {"origins": "*"}})
     """
     @TODO: Use the after_request decorator to set Access-Control-Allow
     """
+    @app.after_request
+    def after_request(response):
+        response.headers.add('Access-Control-Allow-Headers','Content-Type, Authorization')
+        response.headers.add('Access-Control-Allow-Headers','GET,POST,PATCH,DELETE,OPTIONS')
+        return response
 
     """
     @TODO:
     Create an endpoint to handle GET requests
     for all available categories.
     """
+    @app.route('/categories',methods=['GET'])
+    def get_categories():
+        categories = Category.query.join(Question,Category.id == Question.category).all()    
+        format_categories = [category.format() for category in categories ]
+        return jsonify({
+            'Success':True,
+            'Categories': format_categories
+        })
 
 
     """
@@ -40,7 +55,21 @@ def create_app(test_config=None):
     ten questions per page and pagination at the bottom of the screen for three pages.
     Clicking on the page numbers should update the questions.
     """
-
+    @app.route('/questions',methods=['GET'])
+    def get_questions():
+        page = request.args.get('page',1,type=int)
+        start = (page - 1) * 10
+        end = start + 10
+        
+        questions = Question.query.all()    
+        format_questions = [question.format() for question in questions ]
+        return jsonify({
+            'Success':True,
+            'Questions': format_questions[start:end],
+            'numb_total_questions':len(format_questions),
+            'numb_total_current_category':len(format_questions),
+            'categories':len(format_questions)
+        })
     """
     @TODO:
     Create an endpoint to DELETE question using a question ID.

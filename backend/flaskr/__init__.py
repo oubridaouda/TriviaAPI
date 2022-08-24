@@ -44,6 +44,8 @@ def create_app(test_config=None):
 
 
     """
+    export FLASK_APP=flaskr
+    export FLASK_ENV=development
     @TODO:
     Create an endpoint to handle GET requests for questions,
     including pagination (every 10 questions).
@@ -62,7 +64,11 @@ def create_app(test_config=None):
         end = start + 10
         
         questions = Question.query.all()    
-        categories = Category.query.all()    
+        categories = Category.query.all()   
+        categoriesList = {} 
+        for list in categories:
+            categoriesList[list.id] = list.type
+
         format_questions = [question.format() for question in questions ]
         format_categories = [category.format() for category in categories ]
         return jsonify({
@@ -70,7 +76,7 @@ def create_app(test_config=None):
             'questions': format_questions[start:end],
             'totalQuestions':len(format_questions),
             'currentCategory':len(format_questions),
-            'categories': {"1": "Science", "2": "Art","3":"Geography","4":"History","5":"Entertainment","6":"Sports"}
+            'categories': categoriesList
         })
     """
     @TODO:
@@ -79,7 +85,20 @@ def create_app(test_config=None):
     TEST: When you click the trash icon next to a question, the question will be removed.
     This removal will persist in the database and when you refresh the page.
     """
-
+    @app.route('/questions/<question_id>/',methods=['DELETE'])
+    def delete_questions(question_id):
+        try:
+            question = Question.query.filter(Question.id == question_id).one_or_none()
+            
+            if question is None:
+                abort(404)
+                
+            question.delete()
+            return jsonify({
+                'success':True
+            })
+        except:
+            abort(422)
     """
     @TODO:
     Create an endpoint to POST a new question,

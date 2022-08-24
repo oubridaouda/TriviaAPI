@@ -32,14 +32,17 @@ def create_app(test_config=None):
     @TODO:
     Create an endpoint to handle GET requests
     for all available categories.
-    """
+    """        
     @app.route('/categories',methods=['GET'])
     def get_categories():
-        categories = Category.query.join(Question,Category.id == Question.category).all()    
-        format_categories = [category.format() for category in categories ]
+        categories = Category.query.all()
+        categoriesList = {} 
+        for list in categories:
+            categoriesList[list.id] = list.type
+            
         return jsonify({
-            'Success':True,
-            'Categories': format_categories
+            'success':True,
+            'categories': categoriesList
         })
 
 
@@ -109,7 +112,21 @@ def create_app(test_config=None):
     the form will clear and the question will appear at the end of the last page
     of the questions list in the "List" tab.
     """
-
+    @app.route('/questions',methods=['POST'])
+    def add_questions():
+        try:
+            body = request.get_json()
+            question = body.get('question', None)
+            answer = body.get('answer', None)
+            difficulty = body.get('difficulty', None)
+            category = body.get('category', None)
+            questions = Question(question=question,answer=answer,category=category,difficulty=difficulty)
+            questions.insert()
+            return jsonify({
+                'success':True
+            })
+        except:
+            abort(422)
     """
     @TODO:
     Create a POST endpoint to get questions based on a search term.
@@ -129,6 +146,20 @@ def create_app(test_config=None):
     categories in the left column will cause only questions of that
     category to be shown.
     """
+    @app.route('/categories/<category_id>/questions',methods=['GET'])
+    def get_categories_question(category_id): 
+        try:
+            questions = Question.query.filter_by(category=category_id).all()
+            category = Category.query.filter_by(id=category_id).first()
+            format_questions = [question.format() for question in questions ]
+            return jsonify({
+                'success':True,
+                'questions':format_questions ,
+                'totalQuestions':len(format_questions),
+                'currentCategory':category.type
+            })
+        except:
+            abort(404)
 
     """
     @TODO:

@@ -1,5 +1,6 @@
 from calendar import c
 import os
+from turtle import title
 from unicodedata import category
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
@@ -78,7 +79,6 @@ def create_app(test_config=None):
             'success':True,
             'questions': format_questions[start:end],
             'totalQuestions':len(format_questions),
-            'currentCategory':len(format_questions),
             'categories': categoriesList
         })
     """
@@ -137,7 +137,17 @@ def create_app(test_config=None):
     only question that include that string within their question.
     Try using the word "title" to start.
     """
-
+    @app.route('/questions/search',methods=['POST'])
+    def search_questions():
+            body = request.get_json()
+            searchTerm = body.get('searchTerm', None)
+            questions = Question.query.filter(Question.question.ilike('%'+searchTerm+'%')).all()
+            format_questions = [question.format() for question in questions ]
+            return jsonify({
+                'success':True,
+                'questions': format_questions,
+                'totalQuestions': len(format_questions),
+            })
     """
     @TODO:
     Create a GET endpoint to get questions based on category.
@@ -172,12 +182,78 @@ def create_app(test_config=None):
     one question at a time is displayed, the user is allowed to answer
     and shown whether they were correct or not.
     """
-
+    @app.route('/quizzes',methods=['POST'])
+    def quizzes():
+        body = request.get_json()
+        quiz_category = body.get('quiz_category')
+        previous_question = body.get('previous_questions')
+        try:
+            if(quiz_category['id'] == 0):
+                questions = Question.query.all()
+            else:
+                questions = Question.query.filter_by(category = quiz_category['id']).all()
+                
+            index = random.randint(0,len(questions)-1)
+            next_question = questions[index]
+            
+            while next_question.id not in previous_question:
+                next_question = questions[index]
+                return jsonify({
+                    'success':True,
+                    'question': {
+                        "answer": next_question.answer,
+                        "category": next_question.category,
+                        "difficulty": next_question.difficulty,
+                        "id": next_question.id,
+                        "question": next_question.question
+                    },
+                    'previousQuestion': previous_question
+                })
+        except Exception as e:
+                    print(e)
+                    abort(404)
     """
     @TODO:
     Create error handlers for all expected errors
     including 404 and 422.
     """
+    @app.errorhandler(404)
+    def page_not_found(error):
+        return jsonify({
+            "success": False,
+            "error": 404,
+            "message": "Page not found"
+        }),404
+        
+    @app.errorhandler(405)
+    def invalid_method(error):
+        return jsonify({
+            "success": False,
+            'error': 405,
+            "message": "Invalid method!"
+        }), 405
+    @app.errorhandler(400)
+    def bad_request(error):
+        return jsonify({
+            "success": False,
+            "error": 400,
+            "message": "Bad request"
+        }),400
 
+    @app.errorhandler(422)
+    def unprocessable_resource(error):
+        return jsonify({
+            "success": False,
+            "error": 404,
+            "message": "Unprocessable resource"
+        }),422
+        
+    @app.errorhandler(500)
+    def internal_server_error(error):
+        return jsonify({
+            "success": False,
+            'error': 500,
+            "message": "Internal server error"
+        }), 500
     return app
 

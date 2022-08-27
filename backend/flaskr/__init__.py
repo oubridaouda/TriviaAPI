@@ -36,15 +36,19 @@ def create_app(test_config=None):
     """        
     @app.route('/categories',methods=['GET'])
     def get_categories():
-        categories = Category.query.all()
-        categoriesList = {} 
-        for list in categories:
-            categoriesList[list.id] = list.type
+        try:
+            categories = Category.query.all()
             
-        return jsonify({
-            'success':True,
-            'categories': categoriesList
-        })
+            categoriesList = {} 
+            for list in categories:
+                categoriesList[list.id] = list.type
+                
+            return jsonify({
+                'success':True,
+                'categories': categoriesList
+            })
+        except:
+            abort(405)
 
 
     """
@@ -66,21 +70,25 @@ def create_app(test_config=None):
         page = request.args.get('page',1,type=int)
         start = (page - 1) * 10
         end = start + 10
-        
-        questions = Question.query.all()    
-        categories = Category.query.all()   
-        categoriesList = {} 
-        for list in categories:
-            categoriesList[list.id] = list.type
+        try:
+            questions = Question.query.all()    
+            categories = Category.query.all()   
+            categoriesList = {} 
+            for list in categories:
+                categoriesList[list.id] = list.type
 
-        format_questions = [question.format() for question in questions ]
-        format_categories = [category.format() for category in categories ]
-        return jsonify({
-            'success':True,
-            'questions': format_questions[start:end],
-            'totalQuestions':len(format_questions),
-            'categories': categoriesList
-        })
+            format_questions = [question.format() for question in questions ]
+            format_categories = [category.format() for category in categories ]
+            if(len(format_questions[start:end])==0):
+                abort(404)
+            return jsonify({
+                'success':True,
+                'questions': format_questions[start:end],
+                'totalQuestions':len(format_questions),
+                'categories': categoriesList
+            })
+        except:
+            abort(400)
     """
     @TODO:
     Create an endpoint to DELETE question using a question ID.
@@ -88,20 +96,21 @@ def create_app(test_config=None):
     TEST: When you click the trash icon next to a question, the question will be removed.
     This removal will persist in the database and when you refresh the page.
     """
-    @app.route('/questions/<question_id>/',methods=['DELETE'])
-    def delete_questions(question_id):
+    @app.route('/questions/<int:id>', methods=['DELETE'])
+    def delete_question(id):
         try:
-            question = Question.query.filter(Question.id == question_id).one_or_none()
-            
+            question = Question.query.filter_by(id=id).one_or_none()
             if question is None:
                 abort(404)
-                
+
             question.delete()
+
             return jsonify({
-                'success':True
+                'success': True,
             })
+
         except:
-            abort(422)
+            abort(404)
     """
     @TODO:
     Create an endpoint to POST a new question,
@@ -143,6 +152,8 @@ def create_app(test_config=None):
             searchTerm = body.get('searchTerm', None)
             questions = Question.query.filter(Question.question.ilike('%'+searchTerm+'%')).all()
             format_questions = [question.format() for question in questions ]
+            if(len(format_questions) == 0):
+                abort(404)
             return jsonify({
                 'success':True,
                 'questions': format_questions,
@@ -160,7 +171,9 @@ def create_app(test_config=None):
     def get_categories_question(category_id): 
         try:
             questions = Question.query.filter_by(category=category_id).all()
-            category = Category.query.filter_by(id=category_id).first()
+            category = Category.query.filter_by(id=category_id).one_or_none()
+            if category is None:
+                abort(404)
             format_questions = [question.format() for question in questions ]
             return jsonify({
                 'success':True,
@@ -195,23 +208,26 @@ def create_app(test_config=None):
                 
             index = random.randint(0,len(questions)-1)
             next_question = questions[index]
-            
-            while next_question.id not in previous_question:
-                next_question = questions[index]
-                return jsonify({
-                    'success':True,
-                    'question': {
-                        "answer": next_question.answer,
-                        "category": next_question.category,
-                        "difficulty": next_question.difficulty,
-                        "id": next_question.id,
-                        "question": next_question.question
-                    },
-                    'previousQuestion': previous_question
-                })
+            if next_question is None:
+                abort(404)
+            else:
+                while next_question.id not in previous_question:
+                    next_question = questions[index]
+                    
+                    return jsonify({
+                        'success':True,
+                        'question': {
+                            "answer": next_question.answer,
+                            "category": next_question.category,
+                            "difficulty": next_question.difficulty,
+                            "id": next_question.id,
+                            "question": next_question.question
+                        },
+                        'previousQuestion': previous_question
+                    })
         except Exception as e:
-                    print(e)
-                    abort(404)
+            print(e)
+            abort(404)
     """
     @TODO:
     Create error handlers for all expected errors

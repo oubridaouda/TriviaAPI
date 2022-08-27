@@ -48,7 +48,7 @@ def create_app(test_config=None):
                 'categories': categoriesList
             })
         except:
-            abort(405)
+            abort(404)
 
 
     """
@@ -240,14 +240,6 @@ def create_app(test_config=None):
             "error": 404,
             "message": "Page not found"
         }),404
-        
-    @app.errorhandler(405)
-    def invalid_method(error):
-        return jsonify({
-            "success": False,
-            'error': 405,
-            "message": "Invalid method!"
-        }), 405
     @app.errorhandler(400)
     def bad_request(error):
         return jsonify({

@@ -198,43 +198,42 @@ def create_app(test_config=None):
     """
     @app.route('/quizzes',methods=['POST'])
     def quizzes():
-        body = request.get_json()
-        quiz_category = body.get('quiz_category')
-        previous_question = body.get('previous_questions')
         try:
-            
+            body = request.get_json()
+            quiz_category = body.get('quiz_category')
+            previous_question = body.get('previous_questions')
             if(quiz_category['id'] == 0):
                 questions = Question.query.all()
             else:
                 questions = Question.query.filter_by(category = quiz_category['id']).all()
             #index = random.choices([0,len(questions)-1],1)
             question_ids = [question.id for question in questions]
-            #print(available_ids)
+            print(question_ids)
             
-            index = random.choices([num for num in question_ids if num not in previous_question])
             #print(index[0])
             if(quiz_category['id'] == 0):
+                index = random.choices([num for num in question_ids if num not in previous_question])
+            
                 next_question = Question.query.filter_by(id = index[0]).first()
             else:
-                next_question = Question.query.filter_by(id = index[0],category = quiz_category['id']).first()
+                index = random.randint(question_ids[0],question_ids[-1]) if previous_question else question_ids[0]
+                print(index)
+                next_question = Question.query.filter_by(id = index,category = quiz_category['id']).first()
             if next_question is None:
                 abort(404)
             else:
-                if next_question.id not in previous_question:
-                    questionList = {                            
-                        "answer": next_question.answer,
-                        "category": next_question.category,
-                        "difficulty": next_question.difficulty,
-                        "id": next_question.id,
-                        "question": next_question.question
-                    }
-                    return jsonify({
-                        'success':True,
-                        'question': questionList,
-                        'previousQuestion': previous_question
-                    })
-                else:
-                    abort(404)
+                questionList = {                            
+                    "answer": next_question.answer,
+                    "category": next_question.category,
+                    "difficulty": next_question.difficulty,
+                    "id": next_question.id,
+                    "question": next_question.question
+                }
+                return jsonify({
+                    'success':True,
+                    'question': questionList,
+                    'previousQuestion': previous_question
+                })
         except:
             abort(404)
     """

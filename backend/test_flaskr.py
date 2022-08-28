@@ -63,7 +63,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['message'], 'Bad request')
         
     def test_delete_questions(self):
-        res = self.client().delete("/questions/11")
+        res = self.client().delete("/questions/14")
         data = json.loads(res.data)
         self.assertEqual(res.status_code,200)
         self.assertEqual(data["success"],True)
@@ -86,6 +86,18 @@ class TriviaTestCase(unittest.TestCase):
         data = json.loads(res.data)
         self.assertEqual(res.status_code,200)
         self.assertEqual(data["success"],True)
+    
+    def  test_error_add_questions(self):
+        testQuestion = {
+            'question': 'Are you fullstack?',
+            'answer': 'Yes',
+            'difficulty': 0,
+            'category': 'xx'
+        }
+        res = self.client().post("/questions",json=testQuestion)
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code,400)
+        self.assertEqual(data["success"],False)
 
     def test_search_questions(self):
         searchTerm = {

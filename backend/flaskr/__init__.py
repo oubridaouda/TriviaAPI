@@ -107,6 +107,7 @@ def create_app(test_config=None):
 
             return jsonify({
                 'success': True,
+                'id': id
             })
 
         except:
@@ -135,7 +136,7 @@ def create_app(test_config=None):
                 'success':True
             })
         except:
-            abort(422)
+            abort(400)
     """
     @TODO:
     Create a POST endpoint to get questions based on a search term.
@@ -197,6 +198,7 @@ def create_app(test_config=None):
     """
     @app.route('/quizzes',methods=['POST'])
     def quizzes():
+        try:
             body = request.get_json()
             quiz_category = body.get('quiz_category')
             previous_question = body.get('previous_questions')
@@ -233,6 +235,8 @@ def create_app(test_config=None):
                     })
                 else:
                     abort(404)
+        except:
+            abort(404)
     """
     @TODO:
     Create error handlers for all expected errors

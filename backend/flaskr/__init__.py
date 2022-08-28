@@ -208,7 +208,7 @@ def create_app(test_config=None):
                 questions = Question.query.filter_by(category = quiz_category['id']).all()
             #index = random.choices([0,len(questions)-1],1)
             question_ids = [question.id for question in questions]
-            print(question_ids)
+            #print(question_ids)
             
             #print(index[0])
             if(quiz_category['id'] == 0):
@@ -217,7 +217,7 @@ def create_app(test_config=None):
                 next_question = Question.query.filter_by(id = index[0]).first()
             else:
                 index = random.randint(question_ids[0],question_ids[-1]) if previous_question else question_ids[0]
-                print(index)
+                #print(index)
                 next_question = Question.query.filter_by(id = index,category = quiz_category['id']).first()
             if next_question is None:
                 abort(404)

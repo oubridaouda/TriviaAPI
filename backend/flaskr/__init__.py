@@ -48,7 +48,7 @@ def create_app(test_config=None):
                 'categories': categoriesList
             })
         except:
-            abort(404)
+            abort(405)
 
 
     """
@@ -198,11 +198,11 @@ def create_app(test_config=None):
     """
     @app.route('/quizzes',methods=['POST'])
     def quizzes():
+        body = request.get_json()
+        quiz_category = body.get('quiz_category')
+        previous_question = body.get('previous_questions')
         try:
-            body = request.get_json()
-            quiz_category = body.get('quiz_category')
-            previous_question = body.get('previous_questions')
-            print(previous_question)
+            
             if(quiz_category['id'] == 0):
                 questions = Question.query.all()
             else:
@@ -249,6 +249,14 @@ def create_app(test_config=None):
             "error": 404,
             "message": "Page not found"
         }),404
+        
+    @app.errorhandler(405)
+    def page_not_found(error):
+        return jsonify({
+            "success": False,
+            "error": 405,
+            "message": "Method Not Allowed"
+        }),405
     @app.errorhandler(400)
     def bad_request(error):
         return jsonify({
@@ -261,7 +269,7 @@ def create_app(test_config=None):
     def unprocessable_resource(error):
         return jsonify({
             "success": False,
-            "error": 404,
+            "error": 422,
             "message": "Unprocessable resource"
         }),422
         

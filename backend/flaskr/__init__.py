@@ -198,7 +198,7 @@ def create_app(test_config=None):
     """
     @app.route('/quizzes',methods=['POST'])
     def quizzes():
-        #try:
+        try:
             body = request.get_json()
             quiz_category = body.get('quiz_category')
             previous_question = body.get('previous_questions')
@@ -237,8 +237,8 @@ def create_app(test_config=None):
                     'question': questionList,
                     'previousQuestion': previous_question
                 })
-        #except:
-        #    abort(404)
+        except:
+            abort(500)
     """
     @TODO:
     Create error handlers for all expected errors

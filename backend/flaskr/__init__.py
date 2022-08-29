@@ -198,7 +198,7 @@ def create_app(test_config=None):
     """
     @app.route('/quizzes',methods=['POST'])
     def quizzes():
-        try:
+        #try:
             body = request.get_json()
             quiz_category = body.get('quiz_category')
             previous_question = body.get('previous_questions')
@@ -211,16 +211,19 @@ def create_app(test_config=None):
             #print(question_ids)
             
             #print(index[0])
-            if(quiz_category['id'] == 0):
+            if len(question_ids) > len(previous_question):
                 index = random.choices([num for num in question_ids if num not in previous_question])
-            
+            else:
+                index = None
+            if(quiz_category['id'] == 0):
                 next_question = Question.query.filter_by(id = index[0]).first()
             else:
-                index = random.randint(question_ids[0],question_ids[-1]) if previous_question else question_ids[0]
-                #print(index)
-                next_question = Question.query.filter_by(id = index,category = quiz_category['id']).first()
-            if next_question is None:
-                abort(404)
+                if index is not None:
+                    next_question = Question.query.filter_by(id = index[0],category = quiz_category['id']).first()
+                    #print(next_question)
+            
+            if index is None:
+                return jsonify({})
             else:
                 questionList = {                            
                     "answer": next_question.answer,
@@ -234,8 +237,8 @@ def create_app(test_config=None):
                     'question': questionList,
                     'previousQuestion': previous_question
                 })
-        except:
-            abort(404)
+        #except:
+        #    abort(404)
     """
     @TODO:
     Create error handlers for all expected errors
